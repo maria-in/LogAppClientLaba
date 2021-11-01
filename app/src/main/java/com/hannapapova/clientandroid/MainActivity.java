@@ -1,6 +1,7 @@
 package com.hannapapova.clientandroid;
 
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
@@ -8,8 +9,11 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+
+import com.google.android.material.textfield.TextInputEditText;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -21,19 +25,23 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
+import java.util.Base64;
 import java.util.Date;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     public static final int SERVERPORT = 3003;
 
-    public static final String SERVER_IP = "192.168.100.223";
+    public static final String SERVER_IP = "192.168.0.100";
     private ClientThread clientThread;
     private Thread thread;
     private LinearLayout msgList;
     private Handler handler;
     private int clientTextColor;
-    private EditText edMessage;
+
+    private TextInputEditText login;
+    private TextInputEditText password;
+    private TextInputEditText userInfoEdit;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,7 +52,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         clientTextColor = ContextCompat.getColor(this, R.color.green);
         handler = new Handler();
         msgList = findViewById(R.id.msgList);
-        edMessage = findViewById(R.id.edMessage);
+
+        login = findViewById(R.id.userNameEditController);
+        password = findViewById(R.id.passwordEditController);
+        userInfoEdit = findViewById(R.id.userInfoController);
+
     }
 
     public TextView textView(String message, int color) {
@@ -68,6 +80,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onClick(View view) {
 
@@ -81,11 +94,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
-        if (view.getId() == R.id.send_data) {
-            String clientMessage = edMessage.getText().toString().trim();
-            showMessage(clientMessage, Color.BLUE);
+        if (view.getId() == R.id.logInButton) {
+            String clientLogin = login.getText().toString().trim();
+            String clientPassword = password.getText().toString().trim();
+
             if (null != clientThread) {
-                clientThread.sendMessage(clientMessage);
+                clientThread.sendMessage(authString(clientLogin, clientPassword));
+            }
+        }
+
+        if (view.getId() == R.id.editButton){
+            String clientLogin = login.getText().toString().trim();
+            String clientEditInfo = userInfoEdit.getText().toString().trim();
+
+            if (null != clientThread) {
+                clientThread.sendMessage(editString(clientLogin, clientEditInfo));
             }
         }
     }
@@ -123,20 +146,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         }
 
-        void sendMessage(final String message) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        if (null != socket) {
-                            PrintWriter out = new PrintWriter(new BufferedWriter(
-                                    new OutputStreamWriter(socket.getOutputStream())),
-                                    true);
-                            out.println(message);
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
+
+        void sendMessage(String message) {
+            new Thread(() -> {
+                try {
+                    if (null != socket) {
+                        PrintWriter out = new PrintWriter(new BufferedWriter(
+                                new OutputStreamWriter(socket.getOutputStream())),
+                                true);
+
+                        out.println(message);
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }).start();
         }
@@ -156,4 +178,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             clientThread = null;
         }
     }
+
+    public static String authString(String username, String password){
+        return "auth {" + username + "}{" + password + "}";
+    }
+
+    public static String editString(String username, String editInfo){
+        return "edit {" + username + "}{" + editInfo + "}";
+    }
 }
+
