@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public static final int SERVERPORT = 3003;
 
-    public static final String SERVER_IP = "192.168.100.223";
+    public static final String SERVER_IP = "192.168.0.101";
     private ClientThread clientThread;
     private Thread thread;
     private Handler handler;
@@ -100,16 +100,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         Thread.interrupted();
                         break;
                     }
-                    if (message.equals("auth error")) {
-                        showToast("Wrong password or username");
+                    if (message.equals("login error")) {
+                        showToast("This user doesn't exist");
                     } else {
-                        String operationWord = message.substring(0, message.indexOf(" "));
-                        if (operationWord.equals("auth")) {
-                            String userInfo = message.substring(message.lastIndexOf('{') + 1, message.lastIndexOf('}'));
-                            showToast("Successfully logged in");
-                            handler.post(() -> userInfoEdit.setText(userInfo));
-                        } else if (operationWord.equals("edit")) {
-                            showToast("Info saved");
+                        if (message.equals("password error")) {
+                            showToast("Wrong password");
+                        } else {
+                            String operationWord = message.substring(0, message.indexOf(" "));
+                            if (operationWord.equals("auth")) {
+                                String userInfo = message.substring(message.lastIndexOf('{') + 1, message.lastIndexOf('}'));
+                                showToast("Successfully logged in");
+                                handler.post(() -> userInfoEdit.setText(userInfo));
+                            } else if (operationWord.equals("edit")) {
+                                showToast("Info saved");
+                            }
                         }
                     }
                 }
