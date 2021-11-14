@@ -75,7 +75,43 @@
         app:layout_constraintTop_toBottomOf="@+id/passwordEdit" />
 
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/userInfo"
+        android:id="@+id/secondPasswordEdit"
+        style="@style/TextEditFields"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/logInButton"
+        app:passwordToggleEnabled="true"
+        android:visibility="gone">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/secondPasswordEditController"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Second password"
+            android:inputType="textPassword" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <Button
+        android:id="@+id/sendSecondPassword"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
+        android:onClick="onClick"
+        android:text="Send second password"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/secondPasswordEdit"
+        android:visibility="gone"/>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/userInfoLayout"
         style="@style/TextEditFields"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -84,7 +120,8 @@
         android:layout_marginEnd="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/logInButton">
+        app:layout_constraintTop_toBottomOf="@+id/logInButton"
+        android:visibility="gone">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/userInfoController"
@@ -104,6 +141,7 @@
         android:text="Edit User Info"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/userInfo" />
+        app:layout_constraintTop_toBottomOf="@+id/userInfoLayout"
+        android:visibility="gone"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

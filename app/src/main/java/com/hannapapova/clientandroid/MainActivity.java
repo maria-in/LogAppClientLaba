@@ -5,12 +5,14 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -25,15 +27,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public static final int SERVERPORT = 3003;
 
-    public static final String SERVER_IP = "192.168.0.101";
+    public static final String SERVER_IP = "10.160.92.145";
     private ClientThread clientThread;
     private Thread thread;
     private Handler handler;
 
     private TextInputEditText login;
     private TextInputEditText password;
-    private TextInputEditText userInfoEdit;
+    private TextInputEditText userInfoEdit, secondPasswordEditController;
     private Context context;
+    private TextInputLayout userInfoLayout;
+    private TextInputLayout secondPasswordLayout;
+    private Button editButton, sendButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,15 +50,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         login = findViewById(R.id.userNameEditController);
         password = findViewById(R.id.passwordEditController);
         userInfoEdit = findViewById(R.id.userInfoController);
+        userInfoLayout = findViewById(R.id.userInfoLayout);
+        editButton = findViewById(R.id.editButton);
+        secondPasswordLayout = findViewById(R.id.secondPasswordEdit);
+        sendButton = findViewById(R.id.sendSecondPassword);
+        secondPasswordEditController = findViewById(R.id.secondPasswordEditController);
     }
 
     public void showToast(String message) {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
-            }
-        });
+        handler.post(() -> Toast.makeText(context, message, Toast.LENGTH_SHORT).show());
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -81,6 +86,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 clientThread.sendMessage(editString(clientLogin, clientEditInfo));
             }
         }
+        if (view.getId() == R.id.sendSecondPassword) {
+            secondPasswordLayout.setVisibility(View.GONE);
+            sendButton.setVisibility(View.GONE);
+            //send
+            String secondPass = "secondPassword {" + secondPasswordEditController.getText().toString().trim() + "}";
+            clientThread.sendMessage(secondPass);
+        }
     }
 
     class ClientThread implements Runnable {
@@ -97,20 +109,42 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     this.input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                     String message = input.readLine();
                     if (null == message || "Disconnect".contentEquals(message)) {
+                        handler.post(() -> {
+                            userInfoLayout.setVisibility(View.GONE);
+                            editButton.setVisibility(View.GONE);
+                        });
                         Thread.interrupted();
                         break;
                     }
-                    if (message.equals("login error")) {
+                    if (message.equals("Enter second password")) {
+                        handler.post(() -> {
+                            secondPasswordLayout.setVisibility(View.VISIBLE);
+                            sendButton.setVisibility(View.VISIBLE);
+                        });
+                    } else if (message.equals("login error")) {
                         showToast("This user doesn't exist");
+                        handler.post(() -> {
+                            userInfoLayout.setVisibility(View.GONE);
+                            editButton.setVisibility(View.GONE);
+                        });
                     } else {
                         if (message.equals("password error")) {
                             showToast("Wrong password");
+                            handler.post(() -> {
+                                userInfoLayout.setVisibility(View.GONE);
+                                editButton.setVisibility(View.GONE);
+                            });
                         } else {
                             String operationWord = message.substring(0, message.indexOf(" "));
                             if (operationWord.equals("auth")) {
                                 String userInfo = message.substring(message.lastIndexOf('{') + 1, message.lastIndexOf('}'));
                                 showToast("Successfully logged in");
-                                handler.post(() -> userInfoEdit.setText(userInfo));
+                                handler.post(() -> {
+                                    userInfoLayout.setVisibility(View.VISIBLE);
+                                    editButton.setVisibility(View.VISIBLE);
+                                    userInfoEdit.setText(userInfo);
+                                });
+
                             } else if (operationWord.equals("edit")) {
                                 showToast("Info saved");
                             }
@@ -148,13 +182,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public static String authString(String username, String password) {
-        String authString = "auth {" + username + "}{" + password + "}";
-        return authString;
+        return "auth {" + username + "}{" + password + "}";
     }
 
     public static String editString(String username, String editInfo) {
-        String editString = "edit {" + username + "}{" + editInfo + "}";
-        return editString;
+        return "edit {" + username + "}{" + editInfo + "}";
     }
 }
 
